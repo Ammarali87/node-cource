@@ -38,4 +38,17 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
+// he middleware runs before the save operation is executed
+
+userSchema.pre("save", async function(next){ 
+  // if password is not modified hash password
+  if(!this.isModified("password")) return next();  
+  this.password = await bcrypt.hash(this.password,12)
+
+//  reset confirmPassword cause it useless
+this.rePassword = undefined ;
+next();
+}
+)
+
 export default User;

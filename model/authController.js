@@ -5,20 +5,20 @@
   //  501 
   // next with error 
 
-  const crypto = require('crypto');
-const { promisify } = require('util');
-const jwt = require('jsonwebtoken');
-const User = require('./../models/userModel');
-const catchAsync = require('./../utils/catchAsync');
-const AppError = require('./../utils/appError');
-const Email = require('./../utils/email');
+  import crypto from 'crypto';
+import { promisify } from 'util';
+import { sign } from 'jsonwebtoken';
+import { create, fondOne } from './../models/userModel';
+import catchAsync from './../utils/catchAsync';
+import AppError from './../utils/appError';
+import Email from './../utils/email';
 
 
 
 
 
-exports.signup = catchAsync(async (req, res, next) => {
-  const newUser = await User.create(
+export const signup = catchAsync(async (req, res, next) => {
+  const newUser = await create(
     req.body
     // bad all can be admin
     // {
@@ -29,7 +29,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   // }
 ); 
 
-const token = jwt.sign({id:newUser._id }, process.env.JWT_SECRET,
+const token = sign({id:newUser._id }, process.env.JWT_SECRET,
   {expiresIn:process.env.JWT_EXPIRIES})
     //  jwt.sign({},"sting" , {})
     
@@ -46,20 +46,23 @@ const token = jwt.sign({id:newUser._id }, process.env.JWT_SECRET,
   });
 });
 
- exports.login((req,res,next)=>{
+export const login = catchAsync(async(req,res,next)=>{
   const {email , password} = req.body ; 
   //1 check if email and pass exist 
  if (!email || !password) {
-  // i think he will use return  but 
+   return next( new AppError(" no Email like this bad req " , 400)) 
   // he use next new appError
- return next( new AppError(" no Email like this bad req " , 400)) 
  }   
   //2 check if user exist and password is right 
-    const user = User.fondOne({email}) //email:email
-  //3  if all okay send token
+    const user = await fondOne({email}).select("+password"); //email:email
+    console.log(user)
+    //3  if all okay send token
+ 
   const token = '';
-  res.status(200).json({status:"success",token})
- })  
+  res.status(200).json({
+    status:"success",
+    token })
+ })
  
  // after export.login make it's route 
  //  router.post("/login" , login)
