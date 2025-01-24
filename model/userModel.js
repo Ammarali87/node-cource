@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import validator from "validator";
-
+   // 401 Unauthorized 
+  // next() use to move to next middleware 
+  // or with error
+  // or with Async func complete
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -36,7 +39,6 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-const User = mongoose.model("User", userSchema);
 
 // he middleware runs before the save operation is executed
 
@@ -47,8 +49,13 @@ userSchema.pre("save", async function(next){
 
 //  reset confirmPassword cause it useless
 this.rePassword = undefined ;
-next();
-}
-)
+next(); } )
 
+
+userSchema.methods.correctPassword = 
+async function(candidatePassword,userPassword){
+  return await bcrypt.compare(candidatePassword,userPassword)
+}
+
+const User = mongoose.model("User", userSchema);
 export default User;

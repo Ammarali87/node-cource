@@ -6,16 +6,20 @@
   // next with error 
 
   import crypto from 'crypto';
-import { promisify } from 'util';
-import { sign } from 'jsonwebtoken';
-import { create, fondOne } from './../models/userModel';
-import catchAsync from './../utils/catchAsync';
-import AppError from './../utils/appError';
-import Email from './../utils/email';
-
-
-
-
+  import { promisify } from 'util';
+  import { sign } from 'jsonwebtoken';
+  import { create, fondOne } from './../models/userModel';
+  import catchAsync from './../utils/catchAsync';
+  import AppError from './../utils/appError';
+  import Email from './../utils/email';
+  
+  
+  
+  const signToken = (id)=>{
+   jwt.sign({id }, process.env.JWT_SECRET,
+      {expiresIn:process.env.JWT_EXPIRIES})
+  }
+   //  jwt.sign({},"sting" , {})
 
 export const signup = catchAsync(async (req, res, next) => {
   const newUser = await create(
@@ -29,10 +33,8 @@ export const signup = catchAsync(async (req, res, next) => {
   // }
 ); 
 
-const token = sign({id:newUser._id }, process.env.JWT_SECRET,
-  {expiresIn:process.env.JWT_EXPIRIES})
-    //  jwt.sign({},"sting" , {})
-    
+ const token = signToken(newUser._id)
+     
   res.status(201).json({
     status: "success",
     message: "User created successfully",
@@ -55,10 +57,19 @@ export const login = catchAsync(async(req,res,next)=>{
  }   
   //2 check if user exist and password is right 
     const user = await fondOne({email}).select("+password"); //email:email
-    console.log(user)
-    //3  if all okay send token
- 
-  const token = '';
+
+    //3 compare password   user.pass and pass 
+    // const correct = 
+    if(!user||!await user.correctPassword(password,user.password))
+      {
+      return next(new AppError("Incorrect email or password",401))
+    }  if(!correct){
+      return next(new AppError("Incorrect email or password",401))
+    }
+    
+    
+    //3  if all okay send token 
+ const token = signToken(user._id) //wrong newUser._id
   res.status(200).json({
     status:"success",
     token })
