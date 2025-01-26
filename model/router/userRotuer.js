@@ -12,8 +12,9 @@ router.post('/forgotPassword', forgotPassword);
 router.patch('/resetPassword/:token', resetPassword);
 
 // Protect all routes after this middleware
+// router.get(protect, getAllUsers)
 router.use(protect);
-   
+
 router.patch('/updateMyPassword', updatePassword);
 router.get('/me', getMe, getUser);  // me take two me and user
 router.patch(   // take 3 upload photo resize updateme 

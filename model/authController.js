@@ -4,15 +4,18 @@
   //500 createUser
   //  501 
   // next with error 
+  // npm run start prodcution some erorr in toke verify
 
   import crypto from 'crypto';
-  import { promisify } from 'util';
   import { sign } from 'jsonwebtoken';
   import { create, fondOne } from './../models/userModel';
-  import catchAsync from './../utils/catchAsync';
-  import AppError from './../utils/appError';
   import Email from './../utils/email';
-  
+import User from './UserModel';
+  const jwt = require("jsonwebtoken");
+  const { promisify } = require("util");
+  const AppError = require("../utils/appError"); // Custom AppError class
+  const catchAsync = require("../utils/catchAsync"); // Async error handling wrapper
+    
   
   
   const signToken = (id)=>{
@@ -77,3 +80,64 @@ export const login = catchAsync(async(req,res,next)=>{
  
  // after export.login make it's route 
  //  router.post("/login" , login)
+
+
+
+
+exports.protect = catchAsync(async (req, res, next) => {
+  let token;
+
+  // 1. Check if the token exists in the Authorization header
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1]; // Extract token
+  }
+
+  // 2. If no token is found, throw an error
+  if (!token) {
+    return next(
+      new AppError("You are not logged in! Please log in to get access.", 401)
+    );
+  }
+
+  // 3. Verify the token (check validity and expiration)
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    // promisify to convert callback to promise
+    // and help to use async await aync await in jwt.verify
+  // 4. Check if the user still exists (e.g., query the database)
+  const freshUser = await User.findById(decoded.id);
+  if (!freshUser) {
+    return next(
+      new AppError("The user belonging to this token no longer exists.", 401)
+    );
+  }
+
+  // 5. Check if the user changed the 
+  // password after the token was issued
+  if (freshUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError("User recently changed password! Please log in again.", 401)
+    );
+  }
+  
+  next();
+});
+
+ 
+
+
+
+
+
+
+
+
+
+  if (error.name === "JsonWebTokenError") {
+    return new AppError("Invalid token. Please log in again!", 401);
+    //  you can pass erro in fun and make it above 
+  } else if (error.name === "TokenExpiredError") {
+    return new AppError("Your token has expired! Please log in again.", 401);
+  } 

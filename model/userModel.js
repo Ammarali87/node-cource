@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema({
       },
       message: "Passwords must match",
     },
+  passwordChangeAt : Date
   },
   photo: {
     type: String,
@@ -56,6 +57,16 @@ userSchema.methods.correctPassword =
 async function(candidatePassword,userPassword){
   return await bcrypt.compare(candidatePassword,userPassword)
 }
+
+
+userSchema.methods.changePassword = function(JwtTimeStamp){
+  if(this.passwordChangeAt){
+    // for test log JWT , stamp
+    const changeTime = 
+parseInt(this.passwordChangeAt.getTime()/1000,10)  // 10 is base 
+  }  
+} 
+
 
 const User = mongoose.model("User", userSchema);
 export default User;
