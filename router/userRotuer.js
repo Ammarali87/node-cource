@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getMe, getUser, uploadUserPhoto, resizeUserPhoto, updateMe, deleteMe, getAllUsers, createUser, updateUser, deleteUser } from './../controllers/userController';
 import { signup, login, logout, forgotPassword, resetPassword, protect, updatePassword, restrictTo } from './../controllers/authController';
 
+//  catchAsync problem also add next to handle error
 
 const router = Router();
 router.post('/signup', signup);

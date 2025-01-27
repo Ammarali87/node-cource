@@ -10,7 +10,7 @@
   import { sign } from 'jsonwebtoken';
   import { create, fondOne } from './../models/userModel';
   import Email from './../utils/email';
-import User from './UserModel';
+import User from './model/UserModel';
   const jwt = require("jsonwebtoken");
   const { promisify } = require("util");
   const AppError = require("../utils/appError"); // Custom AppError class
@@ -107,8 +107,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     // promisify to convert callback to promise
     // and help to use async await aync await in jwt.verify
   // 4. Check if the user still exists (e.g., query the database)
-  const freshUser = await User.findById(decoded.id);
-  if (!freshUser) {
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
     return next(
       new AppError("The user belonging to this token no longer exists.", 401)
     );
@@ -116,16 +116,20 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // 5. Check if the user changed the 
   // password after the token was issued
-  if (freshUser.changedPasswordAfter(decoded.iat)) {
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
       new AppError("User recently changed password! Please log in again.", 401)
     );
   }
-  
+
+   // Grant accect to protected route
+   req.user = currentUser;
+
+   // in post man make changedPasswordAt 22-4-2025 post 
+
   next();
 });
 
- 
 
 
 
