@@ -1,34 +1,30 @@
-//   // update 200 error update 400 
-//  // 201 auth signup create user 
-//   // deleteMe 204
-//   //500 createUser
-//   //  501 
-//   // next with error 
-//   // npm run start prodcution some erorr in toke verify
-
 import { Request, Response, NextFunction } from 'express';
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt  from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import User from './model/UserModel';
-import { catchAsync } from './utils/catchAsync';
+import  { SignOptions } from 'jsonwebtoken';
+import catchAsync from './utils/catchAsync';
+import AppError from './utils/appError';  // For handling errors
+ // faild sign Up400 login 401 token 403
 
-// Generate JWT token
-const signToken = (id: string, secret: string, expiresIn: string) => {
+ // Generate JWT token
+const signToken = (id: string, secret: string, expiresIn:any): string => {
   const options: SignOptions = { expiresIn };
   return jwt.sign({ id }, secret, options);
-};
+};  
 
 // Create and send tokens (access + refresh)
 const createSendToken = (user: any, statusCode: number, res: Response) => {
-  const accessToken = signToken(user._id, process.env.JWT_SECRET!, '1h');
-  const refreshToken = signToken(user._id, process.env.JWT_REFRESH_SECRET!, '7d');
+  const accessToken =
+    signToken(user._id.toString(), process.env.JWT_SECRET!, '1h');
+  const refreshToken = signToken(user._id.toString(), process.env.JWT_REFRESH_SECRET!, '7d');
 
   res.cookie('jwt', refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  }); 
+  });
 
   res.status(statusCode).json({
     status: 'success',
@@ -37,30 +33,43 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
   });
 };
 
-// Signup
-export const signup = catchAsync(async (req: Request, res: Response) => {
+// Signup 
+export const signup = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 12);
-
-  const newUser = await User.create({ name, email, password: hashedPassword });
-  createSendToken(newUser, 201, res);
-});
+  const hashedPassword =
+   await bcrypt.hash(password, 12);
+  // extra check 
+  if (!name|| !email ||!password){
+    return next(new AppError('Please provide name, email and password', 400));
+  }  
+   const newUser = 
+    await User.create(
+      { name, email, password: hashedPassword });
+    createSendToken(newUser, 201, res);
+    if (!newUser) { // ithink it's was !nam,!email
+      return next(new AppError('User not created', 400));       
+    }
+  } 
+);
 
 // Login
-export const login = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const login =
+ catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ message: 'Please provide email and password' });
-
-  const user = await User.findOne({ email }).select('+password');
-  if (!user || !(await bcrypt.compare(password, user.password))) {
+       
+  const user = await User.findOne({ email })
+  .select('+password');
+  if (!user || !(await
+     bcrypt.compare(password, user.password))) {
     return res.status(401).json({ message: 'Incorrect email or password' });
-  }
+  } 
 
   createSendToken(user, 200, res);
 });
 
 // Refresh Token
-export const refreshToken = catchAsync(async (req: Request, res: Response) => {
+export const refreshToken = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const refreshToken = req.cookies.jwt;
   if (!refreshToken) return res.status(403).json({ message: 'Not authorized' });
 
@@ -70,18 +79,27 @@ export const refreshToken = catchAsync(async (req: Request, res: Response) => {
     const user = await User.findById(decoded.id);
     if (!user) return res.status(403).json({ message: 'User not found' });
 
-    const accessToken = signToken(user._id, process.env.JWT_SECRET!, '1h');
+    const accessToken = signToken(user._id.toString(), process.env.JWT_SECRET!, '1h');
     res.json({ accessToken });
   });
 });
 
 // Logout
 export const logout = (req: Request, res: Response) => {
-  res.cookie('jwt', 'loggedout', { httpOnly: true, expires: new Date(Date.now() + 10 * 1000) });
+  res.cookie('jwt', 'loggedout', {
+    httpOnly: true,
+    expires: new Date(Date.now() + 10 * 1000), // Expiry after 10 seconds
+  });
   res.status(200).json({ status: 'success' });
 };
 
-
+// Handle errors (for cases like token verification issues or other unhandled errors)
+export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({ message: err.message });
+  }
+  res.status(500).json({ message: 'Internal server error' });
+};
 
 
 
