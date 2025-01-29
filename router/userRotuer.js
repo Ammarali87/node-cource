@@ -3,7 +3,7 @@ import { getMe, getUser, uploadUserPhoto, resizeUserPhoto, updateMe, deleteMe, g
 import { signup, login, logout, forgotPassword, resetPassword, protect, updatePassword, restrictTo } from './../controllers/authController';
 
 //  catchAsync problem also add next to handle error
-
+// patch to update 
 const router = Router();
 router.post('/signup', signup);
 router.post('/login', login);
@@ -27,7 +27,8 @@ router.patch(   // take 3 upload photo resize updateme
 router.delete('/deleteMe', deleteMe);
  
 router.use(restrictTo('admin'));
- // intial Route router.route("/").get(getAllUsers).post(createUser)
+ // intial Route router
+ // .route("/").get(getAllUsers).post(createUser)
 router
   .route('/')
   .get(getAllUsers)

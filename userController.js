@@ -5,7 +5,7 @@ const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 const factory = require('./handlerFactory');
 
-
+// req.body / reg.params / req.query / req.user
 
 
 
@@ -29,12 +29,17 @@ if (req.body.password || req.body.passwordConfirm) {
   );
 }
 
-// 2) Filtered out unwanted fields names that are not allowed to be updated
-const filteredBody = filterObj(req.body, 'name', 'email');
-if (req.file) filteredBody.photo = req.file.filename;
+// 2) Filtered out unwanted fields 
+// names that are not allowed to be updated
+const filteredBody =
+ filterObj(req.body, 'name', 'email');
+if (req.file) filteredBody.photo
+ = req.file.filename;
 
 // 3) Update user document
-const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+const updatedUser = await 
+User.findByIdAndUpdate(req.user.id, 
+  filteredBody, {
   new: true,
   runValidators: true
 });
