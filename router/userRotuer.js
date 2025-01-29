@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { getMe, getUser, uploadUserPhoto, resizeUserPhoto, updateMe, deleteMe, getAllUsers, createUser, updateUser, deleteUser } from './../controllers/userController';
-import { signup, login, logout, forgotPassword, resetPassword, protect, updatePassword, restrictTo } from './../controllers/authController';
+import { signup,refreshToken, login, logout, forgotPassword, resetPassword, protect, updatePassword, restrictTo } from './../controllers/authController';
+ 
+
+router.post('/refresh-token', refreshToken);
+
 
 //  catchAsync problem also add next to handle error
 // patch to update 
