@@ -7,14 +7,15 @@
 //   // npm run start prodcution some erorr in toke verify
 
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import User from '../models/userModel';
-import { catchAsync } from '../utils/catchAsync';
+import User from './model/UserModel';
+import { catchAsync } from './utils/catchAsync';
 
 // Generate JWT token
 const signToken = (id: string, secret: string, expiresIn: string) => {
-  return jwt.sign({ id }, secret, { expiresIn });
+  const options: SignOptions = { expiresIn };
+  return jwt.sign({ id }, secret, options);
 };
 
 // Create and send tokens (access + refresh)
