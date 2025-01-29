@@ -30,3 +30,12 @@ exports.getToursWithin = catchAsync(async (req,res,next) => {
         )
       );
     }});
+
+    const tour = await Tour.find({})
+
+    res.status(200).json({
+        status:"success",
+        data:{
+            data:tour
+        }
+    });
